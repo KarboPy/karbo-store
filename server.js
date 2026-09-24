@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const path = require("path");
+const fs = require("fs");
 const express = require("express");
 const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
@@ -12,6 +13,9 @@ const morgan = require("morgan");
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const DB_PATH = path.join(__dirname, "data", "karbo.sqlite");
+fs.mkdirSync(path.join(__dirname, "data"), {
+  recursive: true
+});
 
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
