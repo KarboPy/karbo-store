@@ -270,14 +270,44 @@ function filterPlatform(slug) {
 /* OFFERS */
 
 async function loadOffers() {
-  try {
-    offers = await api("/api/offers");
+async function loadOffers() {
+  offers = [
+    {
+      id: 1,
+      platform_slug: "tiktok",
+      title: "حساب TikTok",
+      description: "عرض تجريبي لحساب TikTok",
+      price_cents: 2500,
+      icon: "♪"
+    },
+    {
+      id: 2,
+      platform_slug: "instagram",
+      title: "حساب Instagram",
+      description: "عرض تجريبي لحساب Instagram",
+      price_cents: 3000,
+      icon: "◎"
+    },
+    {
+      id: 3,
+      platform_slug: "youtube",
+      title: "حساب YouTube",
+      description: "عرض تجريبي لحساب YouTube",
+      price_cents: 5000,
+      icon: "▶"
+    },
+    {
+      id: 4,
+      platform_slug: "telegram",
+      title: "حساب Telegram",
+      description: "عرض تجريبي لحساب Telegram",
+      price_cents: 2000,
+      icon: "➤"
+    }
+  ];
 
-    renderOffers(offers);
-  } catch (error) {
-    console.error(error);
-  }
-}
+  renderOffers(offers);
+    }
 
 
 function renderOffers(list) {
