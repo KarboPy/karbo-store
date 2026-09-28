@@ -306,7 +306,7 @@ async function loadOffers() {
   ];
 
   renderOffers(offers);
-    }
+}
 
 
 function renderOffers(list) {
