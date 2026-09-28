@@ -1,5 +1,8 @@
 let currentUser = null;
 
+const ADMIN_USERNAME = "karbo";
+const ADMIN_PASSWORD = "kumahide009@";
+
 const platforms = [
   {
     id: 1,
@@ -59,7 +62,7 @@ const platforms = [
   }
 ];
 
-const offers = [
+let offers = [
   {
     id: 1,
     platform_slug: "tiktok",
@@ -145,19 +148,29 @@ const offers = [
 const $ = (id) => document.getElementById(id);
 
 document.addEventListener("DOMContentLoaded", () => {
-  $("year").textContent = new Date().getFullYear();
+  const year = $("year");
+
+  if (year) {
+    year.textContent = new Date().getFullYear();
+  }
+
+  const loginForm = $("loginForm");
+
+  if (loginForm) {
+    loginForm.addEventListener("submit", login);
+  }
 
   renderPlatforms();
   renderOffers(offers);
   renderPlatformSelect();
-
-  if ($("loginForm")) {
-    $("loginForm").addEventListener("submit", login);
-  }
-
   updateNavigation();
+
   showPage("home");
 });
+
+/* =========================
+   PAGE NAVIGATION
+========================= */
 
 function showPage(page) {
   const pages = [
@@ -192,11 +205,7 @@ function showPage(page) {
     loadOrders();
   }
 
-  if (
-    page === "admin" &&
-    currentUser &&
-    currentUser.role === "admin"
-  ) {
+  if (page === "admin") {
     loadAdmin();
   }
 }
@@ -205,46 +214,64 @@ function showLogin() {
   showPage("login");
 }
 
+/* =========================
+   PLATFORMS
+========================= */
+
 function renderPlatforms() {
   const container = $("platforms");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
-  container.innerHTML = platforms.map((platform) => `
-    <button
-      class="platform-card"
-      onclick="filterPlatform('${platform.slug}')"
-    >
-      <div class="platform-icon">
-        ${escapeHtml(platform.icon)}
-      </div>
+  container.innerHTML = platforms.map((platform) => {
+    return `
+      <button
+        class="platform-card"
+        onclick="filterPlatform('${platform.slug}')"
+      >
 
-      <h3>${escapeHtml(platform.name)}</h3>
+        <div class="platform-icon">
+          ${escapeHtml(platform.icon)}
+        </div>
 
-      <p>
-        ${escapeHtml(platform.description)}
-      </p>
-    </button>
-  `).join("");
+        <h3>
+          ${escapeHtml(platform.name)}
+        </h3>
+
+        <p>
+          ${escapeHtml(platform.description)}
+        </p>
+
+      </button>
+    `;
+  }).join("");
 }
 
 function filterPlatform(slug) {
-  const filteredOffers = offers.filter(
+  const filtered = offers.filter(
     (offer) =>
       offer.platform_slug === slug
   );
 
   showPage("offers");
 
-  renderOffers(filteredOffers);
+  renderOffers(filtered);
 }
+
+/* =========================
+   OFFERS
+========================= */
 
 function renderOffers(list) {
   const container = $("offers");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
-  if (!list || !list.length) {
+  if (!list || list.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         لا توجد عروض متاحة حالياً.
@@ -254,40 +281,46 @@ function renderOffers(list) {
     return;
   }
 
-  container.innerHTML = list.map((offer) => `
-    <article class="offer-card">
+  container.innerHTML = list.map((offer) => {
+    return `
+      <article class="offer-card">
 
-      <div class="offer-icon">
-        ${escapeHtml(offer.icon || "📦")}
-      </div>
-
-      <h3>
-        ${escapeHtml(offer.title)}
-      </h3>
-
-      <p>
-        ${escapeHtml(offer.description || "")}
-      </p>
-
-      <div class="offer-footer">
-
-        <div class="price">
-          ${formatMoney(offer.price_cents)}
-          <small>USD</small>
+        <div class="offer-icon">
+          ${escapeHtml(offer.icon || "📦")}
         </div>
 
-        <button
-          class="primary-btn"
-          onclick="buyOffer(${offer.id})"
-        >
-          شراء
-        </button>
+        <h3>
+          ${escapeHtml(offer.title)}
+        </h3>
 
-      </div>
+        <p>
+          ${escapeHtml(offer.description || "")}
+        </p>
 
-    </article>
-  `).join("");
+        <div class="offer-footer">
+
+          <div class="price">
+            ${formatMoney(offer.price_cents)}
+            <small>USD</small>
+          </div>
+
+          <button
+            class="primary-btn"
+            onclick="buyOffer(${offer.id})"
+          >
+            شراء
+          </button>
+
+        </div>
+
+      </article>
+    `;
+  }).join("");
 }
+
+/* =========================
+   BUY
+========================= */
 
 function buyOffer(offerId) {
   const offer = offers.find(
@@ -300,42 +333,62 @@ function buyOffer(offerId) {
     return;
   }
 
+  if (!currentUser) {
+    showLogin();
+    return;
+  }
+
   const confirmed = confirm(
-    `هل تريد شراء العرض؟\n\n${offer.title}\nالسعر: ${formatMoney(offer.price_cents)} USD`
+    "هل تريد إنشاء طلب لهذا العرض؟\n\n" +
+    offer.title +
+    "\nالسعر: " +
+    formatMoney(offer.price_cents) +
+    " USD"
   );
 
-  if (!confirmed) return;
+  if (!confirmed) {
+    return;
+  }
 
   alert(
-    "هذا إصدار تجريبي حالياً.\nسيتم ربط الدفع والطلبات الحقيقية بعد إضافة Backend."
+    "تم تسجيل طلبك تجريبياً.\n" +
+    "رقم الطلب: #" +
+    Math.floor(Math.random() * 9000 + 1000)
   );
 }
+
+/* =========================
+   LOGIN
+========================= */
 
 function login(event) {
   event.preventDefault();
 
+  const usernameInput = $("username");
+  const passwordInput = $("password");
+  const message = $("loginMessage");
+
+  if (!usernameInput || !passwordInput || !message) {
+    return;
+  }
+
   const username =
-    $("username").value.trim();
+    usernameInput.value.trim();
 
   const password =
-    $("password").value;
+    passwordInput.value;
 
-  const message =
-    $("loginMessage");
+  message.textContent =
+    "جاري تسجيل الدخول...";
 
-  /*
-    تسجيل دخول تجريبي للواجهة فقط.
-    الحساب:
-    username: karbo
-    password: kumahide009@
-  */
+  message.style.color = "";
 
   if (
-    username === "karbo" &&
-    password === "kumahide009@"
+    username === ADMIN_USERNAME &&
+    password === ADMIN_PASSWORD
   ) {
     currentUser = {
-      username: "karbo",
+      username: ADMIN_USERNAME,
       role: "admin"
     };
 
@@ -349,16 +402,21 @@ function login(event) {
 
     setTimeout(() => {
       showPage("admin");
-    }, 500);
+    }, 400);
 
-  } else {
-    message.textContent =
-      "اسم المستخدم أو كلمة المرور غير صحيحة";
-
-    message.style.color =
-      "var(--danger)";
+    return;
   }
+
+  message.textContent =
+    "اسم المستخدم أو كلمة المرور غير صحيحة";
+
+  message.style.color =
+    "var(--danger)";
 }
+
+/* =========================
+   LOGOUT
+========================= */
 
 function logout() {
   currentUser = null;
@@ -368,12 +426,13 @@ function logout() {
   showPage("home");
 }
 
-function updateNavigation() {
-  const loginNav =
-    $("loginNav");
+/* =========================
+   NAVIGATION
+========================= */
 
-  const logoutNav =
-    $("logoutNav");
+function updateNavigation() {
+  const loginNav = $("loginNav");
+  const logoutNav = $("logoutNav");
 
   if (!loginNav || !logoutNav) {
     return;
@@ -383,26 +442,26 @@ function updateNavigation() {
     loginNav.classList.add("hidden");
     logoutNav.classList.remove("hidden");
 
-    if (
-      currentUser.role === "admin"
-    ) {
-      addAdminButton();
-    }
+    addAdminButton();
 
   } else {
     loginNav.classList.remove("hidden");
     logoutNav.classList.add("hidden");
 
-    const adminNav =
+    const oldAdmin =
       $("adminNav");
 
-    if (adminNav) {
-      adminNav.remove();
+    if (oldAdmin) {
+      oldAdmin.remove();
     }
   }
 }
 
 function addAdminButton() {
+  if (!currentUser) {
+    return;
+  }
+
   if ($("adminNav")) {
     return;
   }
@@ -418,14 +477,34 @@ function addAdminButton() {
     showPage("admin");
   };
 
-  $("logoutNav").before(button);
+  const logoutNav =
+    $("logoutNav");
+
+  if (logoutNav) {
+    logoutNav.before(button);
+  }
 }
 
-function loadOrders() {
-  const container =
-    $("orders");
+/* =========================
+   ORDERS
+========================= */
 
-  if (!container) return;
+function loadOrders() {
+  const container = $("orders");
+
+  if (!container) {
+    return;
+  }
+
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="empty-state">
+        سجل الدخول أولاً لمشاهدة طلباتك.
+      </div>
+    `;
+
+    return;
+  }
 
   container.innerHTML = `
     <div class="empty-state">
@@ -436,24 +515,9 @@ function loadOrders() {
   `;
 }
 
-function renderPlatformSelect() {
-  const select =
-    $("offerPlatform");
-
-  if (!select) return;
-
-  select.innerHTML = `
-    <option value="">
-      اختر المنصة
-    </option>
-
-    ${platforms.map((platform) => `
-      <option value="${platform.id}">
-        ${escapeHtml(platform.name)}
-      </option>
-    `).join("")}
-  `;
-}
+/* =========================
+   ADMIN
+========================= */
 
 function loadAdmin() {
   if (
@@ -466,13 +530,16 @@ function loadAdmin() {
   loadAdminStats();
   loadAdminOffers();
   loadAdminOrders();
+  renderPlatformSelect();
 }
 
 function loadAdminStats() {
   const container =
     $("adminStats");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   container.innerHTML = `
     <div class="stat-card">
@@ -497,11 +564,148 @@ function loadAdminStats() {
   `;
 }
 
+function renderPlatformSelect() {
+  const select =
+    $("offerPlatform");
+
+  if (!select) {
+    return;
+  }
+
+  select.innerHTML = `
+    <option value="">
+      اختر المنصة
+    </option>
+
+    ${platforms.map((platform) => `
+      <option value="${platform.id}">
+        ${escapeHtml(platform.name)}
+      </option>
+    `).join("")}
+  `;
+}
+
+/* =========================
+   ADMIN ADD OFFER
+========================= */
+
+const offerForm = $("offerForm");
+
+if (offerForm) {
+  offerForm.addEventListener(
+    "submit",
+    addOffer
+  );
+}
+
+function addOffer(event) {
+  event.preventDefault();
+
+  if (
+    !currentUser ||
+    currentUser.role !== "admin"
+  ) {
+    alert("صلاحيات الأدمن مطلوبة");
+    return;
+  }
+
+  const platformId =
+    Number($("offerPlatform").value);
+
+  const title =
+    $("offerTitle").value.trim();
+
+  const description =
+    $("offerDescription").value.trim();
+
+  const price =
+    Number($("offerPrice").value);
+
+  const icon =
+    $("offerIcon").value.trim() || "📦";
+
+  if (!platformId) {
+    alert("اختر المنصة");
+    return;
+  }
+
+  if (!title) {
+    alert("اكتب عنوان العرض");
+    return;
+  }
+
+  if (!Number.isFinite(price) || price < 0) {
+    alert("السعر غير صحيح");
+    return;
+  }
+
+  const platform =
+    platforms.find(
+      (item) =>
+        Number(item.id) === platformId
+    );
+
+  if (!platform) {
+    alert("المنصة غير موجودة");
+    return;
+  }
+
+  const newOffer = {
+    id:
+      offers.length
+        ? Math.max(
+            ...offers.map(
+              (item) => Number(item.id)
+            )
+          ) + 1
+        : 1,
+
+    platform_slug:
+      platform.slug,
+
+    title,
+    description,
+
+    price_cents:
+      Math.round(price * 100),
+
+    icon
+  };
+
+  offers.unshift(newOffer);
+
+  renderOffers(offers);
+  loadAdminStats();
+  loadAdminOffers();
+
+  event.target.reset();
+
+  $("offerIcon").value = "📦";
+
+  alert("تمت إضافة العرض بنجاح");
+}
+
+/* =========================
+   ADMIN OFFERS
+========================= */
+
 function loadAdminOffers() {
   const container =
     $("adminOffers");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
+
+  if (!offers.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        لا توجد عروض.
+      </div>
+    `;
+
+    return;
+  }
 
   container.innerHTML = `
     <table class="admin-table">
@@ -522,8 +726,8 @@ function loadAdminOffers() {
 
           const platform =
             platforms.find(
-              (p) =>
-                p.slug ===
+              (item) =>
+                item.slug ===
                 offer.platform_slug
             );
 
@@ -551,7 +755,8 @@ function loadAdminOffers() {
               <td>
                 ${formatMoney(
                   offer.price_cents
-                )} USD
+                )}
+                USD
               </td>
 
               <td>
@@ -568,11 +773,17 @@ function loadAdminOffers() {
   `;
 }
 
+/* =========================
+   ADMIN ORDERS
+========================= */
+
 function loadAdminOrders() {
   const container =
     $("adminOrders");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   container.innerHTML = `
     <div class="empty-state">
@@ -580,6 +791,10 @@ function loadAdminOrders() {
     </div>
   `;
 }
+
+/* =========================
+   HELPERS
+========================= */
 
 function formatMoney(cents) {
   return (
@@ -589,9 +804,24 @@ function formatMoney(cents) {
 
 function escapeHtml(value) {
   return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-      }
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+}
