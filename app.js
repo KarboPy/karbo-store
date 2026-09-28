@@ -10,11 +10,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("loginForm").addEventListener("submit", login);
   $("offerForm").addEventListener("submit", createOffer);
 
-  await loadSession();
-  await loadPlatforms();
-  await loadOffers();
+await loadSession();
+await loadPlatforms();
+await loadOffers();
 
-  showPage("home");
+showPage("home");
 });
 
 
