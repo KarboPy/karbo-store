@@ -1,107 +1,163 @@
 let currentUser = null;
-let platforms = [];
-let offers = [];
+
+const platforms = [
+  {
+    id: 1,
+    slug: "tiktok",
+    name: "TikTok",
+    icon: "♪",
+    description: "عروض TikTok"
+  },
+  {
+    id: 2,
+    slug: "instagram",
+    name: "Instagram",
+    icon: "◎",
+    description: "عروض Instagram"
+  },
+  {
+    id: 3,
+    slug: "youtube",
+    name: "YouTube",
+    icon: "▶",
+    description: "عروض YouTube"
+  },
+  {
+    id: 4,
+    slug: "facebook",
+    name: "Facebook",
+    icon: "f",
+    description: "عروض Facebook"
+  },
+  {
+    id: 5,
+    slug: "telegram",
+    name: "Telegram",
+    icon: "➤",
+    description: "عروض Telegram"
+  },
+  {
+    id: 6,
+    slug: "x",
+    name: "X",
+    icon: "𝕏",
+    description: "عروض X"
+  },
+  {
+    id: 7,
+    slug: "snapchat",
+    name: "Snapchat",
+    icon: "👻",
+    description: "عروض Snapchat"
+  },
+  {
+    id: 8,
+    slug: "twitch",
+    name: "Twitch",
+    icon: "◈",
+    description: "عروض Twitch"
+  }
+];
+
+const offers = [
+  {
+    id: 1,
+    platform_slug: "tiktok",
+    title: "TikTok Starter",
+    description: "عرض تجريبي لـ TikTok",
+    price_cents: 2500,
+    icon: "♪"
+  },
+  {
+    id: 2,
+    platform_slug: "tiktok",
+    title: "TikTok Premium",
+    description: "عرض TikTok مميز",
+    price_cents: 5000,
+    icon: "♪"
+  },
+  {
+    id: 3,
+    platform_slug: "instagram",
+    title: "Instagram Starter",
+    description: "عرض تجريبي لـ Instagram",
+    price_cents: 3000,
+    icon: "◎"
+  },
+  {
+    id: 4,
+    platform_slug: "instagram",
+    title: "Instagram Premium",
+    description: "عرض Instagram مميز",
+    price_cents: 6000,
+    icon: "◎"
+  },
+  {
+    id: 5,
+    platform_slug: "youtube",
+    title: "YouTube Channel",
+    description: "عرض تجريبي لـ YouTube",
+    price_cents: 5000,
+    icon: "▶"
+  },
+  {
+    id: 6,
+    platform_slug: "facebook",
+    title: "Facebook Account",
+    description: "عرض تجريبي لـ Facebook",
+    price_cents: 3500,
+    icon: "f"
+  },
+  {
+    id: 7,
+    platform_slug: "telegram",
+    title: "Telegram Account",
+    description: "عرض تجريبي لـ Telegram",
+    price_cents: 2000,
+    icon: "➤"
+  },
+  {
+    id: 8,
+    platform_slug: "x",
+    title: "X Account",
+    description: "عرض تجريبي لـ X",
+    price_cents: 4000,
+    icon: "𝕏"
+  },
+  {
+    id: 9,
+    platform_slug: "snapchat",
+    title: "Snapchat Account",
+    description: "عرض تجريبي لـ Snapchat",
+    price_cents: 3000,
+    icon: "👻"
+  },
+  {
+    id: 10,
+    platform_slug: "twitch",
+    title: "Twitch Account",
+    description: "عرض تجريبي لـ Twitch",
+    price_cents: 4500,
+    icon: "◈"
+  }
+];
 
 const $ = (id) => document.getElementById(id);
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   $("year").textContent = new Date().getFullYear();
 
-  $("loginForm").addEventListener("submit", login);
-  $("offerForm").addEventListener("submit", createOffer);
+  renderPlatforms();
+  renderOffers(offers);
+  renderPlatformSelect();
 
-await loadSession();
-await loadPlatforms();
-await loadOffers();
+  if ($("loginForm")) {
+    $("loginForm").addEventListener("submit", login);
+  }
 
-showPage("home");
+  updateNavigation();
+  showPage("home");
 });
-
-
-async function api(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
-    ...options
-  });
-
-  let data = {};
-
-  try {
-    data = await response.json();
-  } catch (_) {}
-
-  if (!response.ok) {
-    throw new Error(
-      data.error || "حدث خطأ"
-    );
-  }
-
-  return data;
-}
-
-
-/* SESSION */
-
-async function loadSession() {
-  try {
-    const data = await api("/api/session");
-
-    currentUser = data.user || null;
-
-    updateNavigation();
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-
-function updateNavigation() {
-  const loginNav = $("loginNav");
-  const logoutNav = $("logoutNav");
-
-  if (currentUser) {
-    loginNav.classList.add("hidden");
-    logoutNav.classList.remove("hidden");
-
-    if (currentUser.role === "admin") {
-      addAdminButton();
-    }
-  } else {
-    loginNav.classList.remove("hidden");
-    logoutNav.classList.add("hidden");
-
-    const oldAdmin = $("adminNav");
-
-    if (oldAdmin) {
-      oldAdmin.remove();
-    }
-  }
-}
-
-
-function addAdminButton() {
-  if ($("adminNav")) return;
-
-  const button = document.createElement("button");
-
-  button.id = "adminNav";
-  button.className = "nav-btn";
-  button.textContent = "الإدارة";
-
-  button.onclick = () => {
-    showPage("admin");
-    loadAdmin();
-  };
-
-  $("logoutNav").before(button);
-}
-
-
-/* NAVIGATION */
 
 function showPage(page) {
   const pages = [
@@ -112,7 +168,7 @@ function showPage(page) {
     "admin"
   ];
 
-  pages.forEach(name => {
+  pages.forEach((name) => {
     const element = $(`${name}Page`);
 
     if (element) {
@@ -129,7 +185,7 @@ function showPage(page) {
   });
 
   if (page === "offers") {
-    loadOffers();
+    renderOffers(offers);
   }
 
   if (page === "orders") {
@@ -138,183 +194,57 @@ function showPage(page) {
 
   if (
     page === "admin" &&
-    currentUser?.role === "admin"
+    currentUser &&
+    currentUser.role === "admin"
   ) {
     loadAdmin();
   }
 }
 
-
 function showLogin() {
   showPage("login");
 }
-
-
-/* PLATFORMS */
-
-async function loadPlatforms() {
-  platforms = [
-    {
-      id: 1,
-      slug: "tiktok",
-      name: "TikTok",
-      icon: "♪",
-      description: "عروض TikTok"
-    },
-    {
-      id: 2,
-      slug: "instagram",
-      name: "Instagram",
-      icon: "◎",
-      description: "عروض Instagram"
-    },
-    {
-      id: 3,
-      slug: "youtube",
-      name: "YouTube",
-      icon: "▶",
-      description: "عروض YouTube"
-    },
-    {
-      id: 4,
-      slug: "facebook",
-      name: "Facebook",
-      icon: "f",
-      description: "عروض Facebook"
-    },
-    {
-      id: 5,
-      slug: "telegram",
-      name: "Telegram",
-      icon: "➤",
-      description: "عروض Telegram"
-    },
-    {
-      id: 6,
-      slug: "x",
-      name: "X",
-      icon: "𝕏",
-      description: "عروض X"
-    },
-    {
-      id: 7,
-      slug: "snapchat",
-      name: "Snapchat",
-      icon: "👻",
-      description: "عروض Snapchat"
-    },
-    {
-      id: 8,
-      slug: "twitch",
-      name: "Twitch",
-      icon: "◈",
-      description: "عروض Twitch"
-    }
-  ];
-
-  renderPlatforms();
-  renderPlatformSelect();
-    }
-
 
 function renderPlatforms() {
   const container = $("platforms");
 
   if (!container) return;
 
-  if (!platforms.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        لا توجد منصات متاحة حالياً.
-      </div>
-    `;
-
-    return;
-  }
-
-  container.innerHTML = platforms.map(platform => `
+  container.innerHTML = platforms.map((platform) => `
     <button
       class="platform-card"
-      onclick="filterPlatform('${escapeAttr(platform.slug)}')"
+      onclick="filterPlatform('${platform.slug}')"
     >
-
       <div class="platform-icon">
         ${escapeHtml(platform.icon)}
       </div>
 
-      <h3>
-        ${escapeHtml(platform.name)}
-      </h3>
+      <h3>${escapeHtml(platform.name)}</h3>
 
       <p>
-        ${escapeHtml(platform.description || "")}
+        ${escapeHtml(platform.description)}
       </p>
-
     </button>
   `).join("");
 }
 
-
 function filterPlatform(slug) {
-  showPage("offers");
-
-  const filtered = offers.filter(
-    offer =>
+  const filteredOffers = offers.filter(
+    (offer) =>
       offer.platform_slug === slug
   );
 
-  renderOffers(filtered);
+  showPage("offers");
+
+  renderOffers(filteredOffers);
 }
-
-
-/* OFFERS */
-
-async function loadOffers() {
-  offers = [
-    {
-      id: 1,
-      platform_slug: "tiktok",
-      title: "حساب TikTok",
-      description: "عرض تجريبي لحساب TikTok",
-      price_cents: 2500,
-      icon: "♪"
-    },
-    {
-      id: 2,
-      platform_slug: "instagram",
-      title: "حساب Instagram",
-      description: "عرض تجريبي لحساب Instagram",
-      price_cents: 3000,
-      icon: "◎"
-    },
-    {
-      id: 3,
-      platform_slug: "youtube",
-      title: "حساب YouTube",
-      description: "عرض تجريبي لحساب YouTube",
-      price_cents: 5000,
-      icon: "▶"
-    },
-    {
-      id: 4,
-      platform_slug: "telegram",
-      title: "حساب Telegram",
-      description: "عرض تجريبي لحساب Telegram",
-      price_cents: 2000,
-      icon: "➤"
-    }
-  ];
-
-  renderOffers(offers);
-}
-
 
 function renderOffers(list) {
   const container = $("offers");
 
   if (!container) return;
 
-  if (!list.length) {
+  if (!list || !list.length) {
     container.innerHTML = `
       <div class="empty-state">
         لا توجد عروض متاحة حالياً.
@@ -324,7 +254,7 @@ function renderOffers(list) {
     return;
   }
 
-  container.innerHTML = list.map(offer => `
+  container.innerHTML = list.map((offer) => `
     <article class="offer-card">
 
       <div class="offer-icon">
@@ -348,7 +278,7 @@ function renderOffers(list) {
 
         <button
           class="primary-btn"
-          onclick="buyOffer(${Number(offer.id)})"
+          onclick="buyOffer(${offer.id})"
         >
           شراء
         </button>
@@ -359,15 +289,10 @@ function renderOffers(list) {
   `).join("");
 }
 
-
 function buyOffer(offerId) {
-  if (!currentUser) {
-    showLogin();
-    return;
-  }
-
   const offer = offers.find(
-    x => Number(x.id) === Number(offerId)
+    (item) =>
+      Number(item.id) === Number(offerId)
   );
 
   if (!offer) {
@@ -376,71 +301,43 @@ function buyOffer(offerId) {
   }
 
   const confirmed = confirm(
-    `هل تريد إنشاء طلب للعرض:\n${offer.title}\n\nالسعر: ${formatMoney(offer.price_cents)} USD`
+    `هل تريد شراء العرض؟\n\n${offer.title}\nالسعر: ${formatMoney(offer.price_cents)} USD`
   );
 
   if (!confirmed) return;
 
-  createOrder(offer.id);
+  alert(
+    "هذا إصدار تجريبي حالياً.\nسيتم ربط الدفع والطلبات الحقيقية بعد إضافة Backend."
+  );
 }
 
-
-async function createOrder(offerId) {
-  try {
-    const data = await api("/api/orders", {
-      method: "POST",
-
-      body: JSON.stringify({
-        items: [
-          {
-            offerId,
-            quantity: 1
-          }
-        ]
-      })
-    });
-
-    alert(
-      `تم إنشاء الطلب بنجاح.\nرقم الطلب: #${data.orderId}`
-    );
-
-    showPage("orders");
-
-  } catch (error) {
-    alert(error.message);
-  }
-}
-
-
-/* LOGIN */
-
-async function login(event) {
+function login(event) {
   event.preventDefault();
 
-  const username = $("username").value.trim();
-  const password = $("password").value;
+  const username =
+    $("username").value.trim();
 
-  const message = $("loginMessage");
+  const password =
+    $("password").value;
 
-  message.textContent = "جاري تسجيل الدخول...";
-  message.style.color = "";
+  const message =
+    $("loginMessage");
 
-  try {
-    const data = await api(
-      "/api/auth/login",
-      {
-        method: "POST",
+  /*
+    تسجيل دخول تجريبي للواجهة فقط.
+    الحساب:
+    username: karbo
+    password: kumahide009@
+  */
 
-        body: JSON.stringify({
-          username,
-          password
-        })
-      }
-    );
-
-    currentUser = data.user;
-
-    updateNavigation();
+  if (
+    username === "karbo" &&
+    password === "kumahide009@"
+  ) {
+    currentUser = {
+      username: "karbo",
+      role: "admin"
+    };
 
     message.textContent =
       "تم تسجيل الدخول بنجاح";
@@ -448,162 +345,96 @@ async function login(event) {
     message.style.color =
       "var(--success)";
 
+    updateNavigation();
+
     setTimeout(() => {
-      if (currentUser.role === "admin") {
-        showPage("admin");
-      } else {
-        showPage("home");
-      }
+      showPage("admin");
     }, 500);
 
-  } catch (error) {
+  } else {
     message.textContent =
-      error.message;
+      "اسم المستخدم أو كلمة المرور غير صحيحة";
 
     message.style.color =
       "var(--danger)";
   }
 }
 
+function logout() {
+  currentUser = null;
 
-async function logout() {
-  try {
-    await api(
-      "/api/auth/logout",
-      {
-        method: "POST"
-      }
-    );
+  updateNavigation();
 
-    currentUser = null;
+  showPage("home");
+}
 
-    updateNavigation();
+function updateNavigation() {
+  const loginNav =
+    $("loginNav");
 
-    showPage("home");
+  const logoutNav =
+    $("logoutNav");
 
-  } catch (error) {
-    alert(error.message);
+  if (!loginNav || !logoutNav) {
+    return;
+  }
+
+  if (currentUser) {
+    loginNav.classList.add("hidden");
+    logoutNav.classList.remove("hidden");
+
+    if (
+      currentUser.role === "admin"
+    ) {
+      addAdminButton();
+    }
+
+  } else {
+    loginNav.classList.remove("hidden");
+    logoutNav.classList.add("hidden");
+
+    const adminNav =
+      $("adminNav");
+
+    if (adminNav) {
+      adminNav.remove();
+    }
   }
 }
 
+function addAdminButton() {
+  if ($("adminNav")) {
+    return;
+  }
 
-/* ORDERS */
+  const button =
+    document.createElement("button");
 
-async function loadOrders() {
-  const container = $("orders");
+  button.id = "adminNav";
+  button.className = "nav-btn";
+  button.textContent = "الإدارة";
+
+  button.onclick = () => {
+    showPage("admin");
+  };
+
+  $("logoutNav").before(button);
+}
+
+function loadOrders() {
+  const container =
+    $("orders");
 
   if (!container) return;
 
-  if (!currentUser) {
-    container.innerHTML = `
-      <div class="empty-state">
-        سجل الدخول أولاً لمشاهدة طلباتك.
-      </div>
-    `;
-
-    return;
-  }
-
-  try {
-    const orders =
-      await api("/api/orders");
-
-    if (!orders.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          لا توجد طلبات حتى الآن.
-        </div>
-      `;
-
-      return;
-    }
-
-    container.innerHTML = orders.map(order => `
-      <div class="order-card">
-
-        <div>
-          <strong>
-            الطلب #${Number(order.id)}
-          </strong>
-
-          <div style="color:var(--muted);font-size:12px">
-            ${escapeHtml(order.created_at)}
-          </div>
-        </div>
-
-        <div>
-          <span class="order-status">
-            ${statusText(order.status)}
-          </span>
-        </div>
-
-        <strong>
-          ${formatMoney(order.total_cents)} USD
-        </strong>
-
-      </div>
-    `).join("");
-
-  } catch (error) {
-    container.innerHTML = `
-      <div class="empty-state">
-        ${escapeHtml(error.message)}
-      </div>
-    `;
-  }
+  container.innerHTML = `
+    <div class="empty-state">
+      لا توجد طلبات حالياً.
+      <br>
+      نظام الطلبات الحقيقي سيتم ربطه بالـ Backend.
+    </div>
+  `;
 }
-
-
-/* ADMIN */
-
-async function loadAdmin() {
-  if (!currentUser || currentUser.role !== "admin") {
-    return;
-  }
-
-  await Promise.all([
-    loadAdminStats(),
-    loadAdminOffers(),
-    loadAdminOrders(),
-    loadPlatforms()
-  ]);
-}
-
-
-async function loadAdminStats() {
-  try {
-    const stats =
-      await api("/api/admin/stats");
-
-    $("adminStats").innerHTML = `
-      <div class="stat-card">
-        <span>العروض</span>
-        <strong>${stats.offers}</strong>
-      </div>
-
-      <div class="stat-card">
-        <span>المستخدمون</span>
-        <strong>${stats.users}</strong>
-      </div>
-
-      <div class="stat-card">
-        <span>الطلبات</span>
-        <strong>${stats.orders}</strong>
-      </div>
-
-      <div class="stat-card">
-        <span>المبيعات</span>
-        <strong>
-          ${formatMoney(stats.sales_cents)}
-        </strong>
-      </div>
-    `;
-
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 
 function renderPlatformSelect() {
   const select =
@@ -616,337 +447,145 @@ function renderPlatformSelect() {
       اختر المنصة
     </option>
 
-    ${platforms.map(platform => `
-      <option value="${Number(platform.id)}">
+    ${platforms.map((platform) => `
+      <option value="${platform.id}">
         ${escapeHtml(platform.name)}
       </option>
     `).join("")}
   `;
 }
 
-
-async function createOffer(event) {
-  event.preventDefault();
-
+function loadAdmin() {
   if (
     !currentUser ||
     currentUser.role !== "admin"
   ) {
-    alert("صلاحيات الأدمن مطلوبة");
     return;
   }
 
-  const platformId =
-    $("offerPlatform").value;
-
-  const title =
-    $("offerTitle").value.trim();
-
-  const description =
-    $("offerDescription").value.trim();
-
-  const price =
-    $("offerPrice").value;
-
-  const icon =
-    $("offerIcon").value.trim() || "📦";
-
-  try {
-    await api(
-      "/api/admin/offers",
-      {
-        method: "POST",
-
-        body: JSON.stringify({
-          platformId,
-          title,
-          description,
-          price,
-          icon
-        })
-      }
-    );
-
-    alert("تمت إضافة العرض");
-
-    $("offerForm").reset();
-
-    $("offerIcon").value = "📦";
-
-    await loadOffers();
-    await loadAdmin();
-
-  } catch (error) {
-    alert(error.message);
-  }
+  loadAdminStats();
+  loadAdminOffers();
+  loadAdminOrders();
 }
 
+function loadAdminStats() {
+  const container =
+    $("adminStats");
 
-async function loadAdminOffers() {
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="stat-card">
+      <span>العروض</span>
+      <strong>${offers.length}</strong>
+    </div>
+
+    <div class="stat-card">
+      <span>المستخدمون</span>
+      <strong>1</strong>
+    </div>
+
+    <div class="stat-card">
+      <span>الطلبات</span>
+      <strong>0</strong>
+    </div>
+
+    <div class="stat-card">
+      <span>المبيعات</span>
+      <strong>0.00</strong>
+    </div>
+  `;
+}
+
+function loadAdminOffers() {
   const container =
     $("adminOffers");
 
   if (!container) return;
 
-  try {
-    const list =
-      await api("/api/admin/offers");
+  container.innerHTML = `
+    <table class="admin-table">
 
-    if (!list.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          لا توجد عروض.
-        </div>
-      `;
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>العرض</th>
+          <th>المنصة</th>
+          <th>السعر</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
 
-      return;
-    }
+      <tbody>
 
-    container.innerHTML = `
-      <table class="admin-table">
+        ${offers.map((offer) => {
 
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>العرض</th>
-            <th>المنصة</th>
-            <th>السعر</th>
-            <th>الحالة</th>
-            <th>إجراء</th>
-          </tr>
-        </thead>
+          const platform =
+            platforms.find(
+              (p) =>
+                p.slug ===
+                offer.platform_slug
+            );
 
-        <tbody>
-
-          ${list.map(offer => `
+          return `
             <tr>
 
               <td>
-                ${Number(offer.id)}
+                ${offer.id}
               </td>
 
               <td>
-                ${escapeHtml(offer.title)}
+                ${escapeHtml(
+                  offer.title
+                )}
               </td>
 
               <td>
-                ${escapeHtml(offer.platform_name)}
+                ${escapeHtml(
+                  platform
+                    ? platform.name
+                    : "-"
+                )}
               </td>
 
               <td>
-                ${formatMoney(offer.price_cents)}
+                ${formatMoney(
+                  offer.price_cents
+                )} USD
               </td>
 
               <td>
-                ${offer.active ? "فعال" : "متوقف"}
-              </td>
-
-              <td>
-
-                <button
-                  class="secondary-btn"
-                  onclick="toggleOffer(
-                    ${Number(offer.id)},
-                    ${offer.active ? "false" : "true"}
-                  )"
-                >
-                  ${offer.active ? "تعطيل" : "تفعيل"}
-                </button>
-
+                فعال
               </td>
 
             </tr>
-          `).join("")}
+          `;
+        }).join("")}
 
-        </tbody>
+      </tbody>
 
-      </table>
-    `;
-
-  } catch (error) {
-    container.innerHTML = `
-      <div class="empty-state">
-        ${escapeHtml(error.message)}
-      </div>
-    `;
-  }
+    </table>
+  `;
 }
 
-
-async function toggleOffer(id, active) {
-  try {
-    await api(
-      `/api/admin/offers/${id}`,
-      {
-        method: "PATCH",
-
-        body: JSON.stringify({
-          active
-        })
-      }
-    );
-
-    await loadOffers();
-    await loadAdminOffers();
-    await loadAdminStats();
-
-  } catch (error) {
-    alert(error.message);
-  }
-}
-
-
-async function loadAdminOrders() {
+function loadAdminOrders() {
   const container =
     $("adminOrders");
 
   if (!container) return;
 
-  try {
-    const list =
-      await api("/api/admin/orders");
-
-    if (!list.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          لا توجد طلبات.
-        </div>
-      `;
-
-      return;
-    }
-
-    container.innerHTML = `
-      <table class="admin-table">
-
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>المستخدم</th>
-            <th>المبلغ</th>
-            <th>الحالة</th>
-            <th>التاريخ</th>
-            <th>تحديث</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          ${list.map(order => `
-            <tr>
-
-              <td>
-                #${Number(order.id)}
-              </td>
-
-              <td>
-                ${escapeHtml(order.username || "-")}
-              </td>
-
-              <td>
-                ${formatMoney(order.total_cents)}
-              </td>
-
-              <td>
-                ${statusText(order.status)}
-              </td>
-
-              <td>
-                ${escapeHtml(order.created_at)}
-              </td>
-
-              <td>
-
-                <select
-                  onchange="changeOrderStatus(
-                    ${Number(order.id)},
-                    this.value
-                  )"
-                >
-
-                  ${[
-                    "pending",
-                    "paid",
-                    "processing",
-                    "completed",
-                    "cancelled"
-                  ].map(status => `
-                    <option
-                      value="${status}"
-                      ${status === order.status ? "selected" : ""}
-                    >
-                      ${statusText(status)}
-                    </option>
-                  `).join("")}
-
-                </select>
-
-              </td>
-
-            </tr>
-          `).join("")}
-
-        </tbody>
-
-      </table>
-    `;
-
-  } catch (error) {
-    container.innerHTML = `
-      <div class="empty-state">
-        ${escapeHtml(error.message)}
-      </div>
-    `;
-  }
+  container.innerHTML = `
+    <div class="empty-state">
+      لا توجد طلبات حالياً.
+    </div>
+  `;
 }
-
-
-async function changeOrderStatus(id, status) {
-  try {
-    await api(
-      `/api/admin/orders/${id}`,
-      {
-        method: "PATCH",
-
-        body: JSON.stringify({
-          status
-        })
-      }
-    );
-
-    await loadAdminOrders();
-    await loadAdminStats();
-
-  } catch (error) {
-    alert(error.message);
-  }
-}
-
-
-/* HELPERS */
 
 function formatMoney(cents) {
   return (
     Number(cents || 0) / 100
   ).toFixed(2);
 }
-
-
-function statusText(status) {
-  const statuses = {
-    pending: "قيد الانتظار",
-    paid: "مدفوع",
-    processing: "قيد المعالجة",
-    completed: "مكتمل",
-    cancelled: "ملغي"
-  };
-
-  return (
-    statuses[status] ||
-    status
-  );
-}
-
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -955,11 +594,4 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-
-function escapeAttr(value) {
-  return String(value ?? "")
-    .replaceAll("\\", "\\\\")
-    .replaceAll("'", "\\'");
-    }
+      }
