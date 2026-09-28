@@ -153,15 +153,68 @@ function showLogin() {
 /* PLATFORMS */
 
 async function loadPlatforms() {
-  try {
-    platforms = await api("/api/platforms");
+  platforms = [
+    {
+      id: 1,
+      slug: "tiktok",
+      name: "TikTok",
+      icon: "♪",
+      description: "عروض TikTok"
+    },
+    {
+      id: 2,
+      slug: "instagram",
+      name: "Instagram",
+      icon: "◎",
+      description: "عروض Instagram"
+    },
+    {
+      id: 3,
+      slug: "youtube",
+      name: "YouTube",
+      icon: "▶",
+      description: "عروض YouTube"
+    },
+    {
+      id: 4,
+      slug: "facebook",
+      name: "Facebook",
+      icon: "f",
+      description: "عروض Facebook"
+    },
+    {
+      id: 5,
+      slug: "telegram",
+      name: "Telegram",
+      icon: "➤",
+      description: "عروض Telegram"
+    },
+    {
+      id: 6,
+      slug: "x",
+      name: "X",
+      icon: "𝕏",
+      description: "عروض X"
+    },
+    {
+      id: 7,
+      slug: "snapchat",
+      name: "Snapchat",
+      icon: "👻",
+      description: "عروض Snapchat"
+    },
+    {
+      id: 8,
+      slug: "twitch",
+      name: "Twitch",
+      icon: "◈",
+      description: "عروض Twitch"
+    }
+  ];
 
-    renderPlatforms();
-    renderPlatformSelect();
-  } catch (error) {
-    console.error(error);
-  }
-}
+  renderPlatforms();
+  renderPlatformSelect();
+    }
 
 
 function renderPlatforms() {
