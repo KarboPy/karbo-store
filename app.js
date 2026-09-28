@@ -270,7 +270,6 @@ function filterPlatform(slug) {
 /* OFFERS */
 
 async function loadOffers() {
-async function loadOffers() {
   offers = [
     {
       id: 1,
